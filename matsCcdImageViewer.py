@@ -496,7 +496,7 @@ class matsViewer(tkinter.Tk):
                     #Handle data stretched over several packets, such as image data, strip header/context data from first packet
                     if groupFlag == 1 or groupFlag == 3:
                         print("Start packet found")
-                        
+						
                         #Extract & display header information
                         self.ccdSelect = struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['CCDSEL']:ridLength+self.ccdDataByteOffset['CCDSEL']+self.ccdDataLengths['CCDSEL']])[0]                        
                         self.ccdSelectLabel.configure(text=("CCD#: " + str(self.ccdSelect)))
@@ -560,12 +560,22 @@ class matsViewer(tkinter.Tk):
                         
                         self.imageData=packet['payload'][ridLength+headerSize+2*self.nBadCols:]
                         
+						sequenceCounter_old = sequenceCounter
+						
                     elif groupFlag == 0 or groupFlag == 2:
                         #print("Mid packet")
-                        self.imageData+=packet['payload'][ridLength:]
+						if sequenceCounter != sequenceCounter_old+1: #Check if packets are in order							
+							print("WARNING: packets out of order!")
+						sequenceCounter_old = sequenceCounter #update counter
+						self.imageData+=packet['payload'][ridLength:]
                     
                     if groupFlag == 2 or groupFlag == 3:
-                        print("Stand-alone or end packet ")                        
+                        print("Stand-alone or end packet ")
+
+						if sequenceCounter != sequenceCounter_old+1: #Check if packets are in order							
+							print("WARNING: packets out of order!")
+						sequenceCounter_old = sequenceCounter #update counter
+						
                         if self.jpegQuality <= 100:
                             self.saveToJpeg(sequenceCounter)
                         else:
