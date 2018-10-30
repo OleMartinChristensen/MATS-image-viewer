@@ -56,7 +56,7 @@ class matsViewer(tkinter.Tk):
         tkinter.Tk.__init__(self,parent)
         self.parent = parent
         
-        self.TmStream=79
+        self.TmStream=17
         
         self.initialize(parent)
         self.ccdDataDefinition()
@@ -247,60 +247,62 @@ class matsViewer(tkinter.Tk):
         self.ccdSelectLabel=Label(self.ccdImageInfoFrame,text="CCD#: ")
         self.ccdSelectLabel.grid(row=0, column=0)
         
-        self.imageScetLabel=Label(self.ccdImageInfoFrame,text="Exposure Start#: ", justify="left")
+        self.imageScetLabel=Label(self.ccdImageInfoFrame,text="Exposure Sec: ", justify="left")
         self.imageScetLabel.grid(row=1, column=0)
+
+        self.exposureFractionLabel=Label(self.ccdImageInfoFrame,text="Exposure Subsec: ", justify="left")
+        self.exposureFractionLabel.grid(row=2, column=0)
         
         self.WindowLabel=Label(self.ccdImageInfoFrame,text="Window Mode: ", justify="left")
-        self.WindowLabel.grid(row=2, column=0)
+        self.WindowLabel.grid(row=3, column=0)
 
         self.OverflowLabel=Label(self.ccdImageInfoFrame,text="Overflow Counter (OBC): ", justify="left")
-        self.OverflowLabel.grid(row=3, column=0)
+        self.OverflowLabel.grid(row=4, column=0)
      
         self.jpegQualityLabel=Label(self.ccdImageInfoFrame,text="JPEG Quality: ", justify="left")
-        self.jpegQualityLabel.grid(row=4, column=0)
+        self.jpegQualityLabel.grid(row=5, column=0)
         
-        
-        self.ExposuretimeLabel=Label(self.ccdImageInfoFrame,text="Exposure time (ms): ", justify="left")
-        self.ExposuretimeLabel.grid(row=5, column=0)
+        self.exposureTimeLabel=Label(self.ccdImageInfoFrame,text="Exposure time (ms): ", justify="left")
+        self.exposureTimeLabel.grid(row=6, column=0)
         
         self.RbinLabel=Label(self.ccdImageInfoFrame,text="Row binning mode: ", justify="left")
-        self.RbinLabel.grid(row=6, column=0)
+        self.RbinLabel.grid(row=7, column=0)
         
         self.CbinLabel=Label(self.ccdImageInfoFrame,text="Column binning mode: ", justify="left")
-        self.CbinLabel.grid(row=7, column=0)
+        self.CbinLabel.grid(row=8, column=0)
         
         self.GainLabel=Label(self.ccdImageInfoFrame,text="Gain: ", justify="left")
-        self.GainLabel.grid(row=8, column=0)
+        self.GainLabel.grid(row=9, column=0)
         
-        self.GainNovLabel=Label(self.ccdImageInfoFrame,text="Number of overflows (CCD): ", justify="left")
-        self.GainNovLabel.grid(row=9, column=0)
+        self.GainOvLabel=Label(self.ccdImageInfoFrame,text="Number of overflows (CCD): ", justify="left")
+        self.GainOvLabel.grid(row=10, column=0)
         
         self.NFlushLabel=Label(self.ccdImageInfoFrame,text="Number of flushes: ", justify="left")
-        self.NFlushLabel.grid(row=10, column=0)
+        self.NFlushLabel.grid(row=11, column=0)
         
         self.NRSkipLabel=Label(self.ccdImageInfoFrame,text="Number of rows to skip: ", justify="left")
-        self.NRSkipLabel.grid(row=11, column=0)
+        self.NRSkipLabel.grid(row=12, column=0)
         
         self.NRBinLabel=Label(self.ccdImageInfoFrame,text="Number of rows to bin: ", justify="left")
-        self.NRBinLabel.grid(row=12, column=0)
+        self.NRBinLabel.grid(row=13, column=0)
         
         self.NRowLabel=Label(self.ccdImageInfoFrame,text="Number of rows: ", justify="left")
-        self.NRowLabel.grid(row=13, column=0)
+        self.NRowLabel.grid(row=14, column=0)
         
         self.NCSkipLabel=Label(self.ccdImageInfoFrame,text="Number of columns to skip: ", justify="left")
-        self.NCSkipLabel.grid(row=14, column=0)
+        self.NCSkipLabel.grid(row=15, column=0)
         
         self.NCBinLabel=Label(self.ccdImageInfoFrame,text="Number of columns to bin: ", justify="left")
-        self.NCBinLabel.grid(row=15, column=0)
+        self.NCBinLabel.grid(row=16, column=0)
         
         self.NColLabel=Label(self.ccdImageInfoFrame,text="Number of columns: ", justify="left")
-        self.NColLabel.grid(row=16, column=0)
+        self.NColLabel.grid(row=17, column=0)
         
         self.NBCLabel=Label(self.ccdImageInfoFrame,text="Number of bad columns: ", justify="left")
-        self.NBCLabel.grid(row=16, column=0)
+        self.NBCLabel.grid(row=18, column=0)
         
         self.totalPayloadPackets=Label(self.ccdImageInfoFrame,text="Total Packets: ")
-        self.totalPayloadPackets.grid(row=17, column=0)
+        self.totalPayloadPackets.grid(row=19, column=0)
             
         ######## --Image output -- #########
         self.image=np.zeros([1,1],dtype='uint16')
@@ -408,21 +410,68 @@ class matsViewer(tkinter.Tk):
             'EXPTS': 1,
             'EXPTSS': 5,
             'WDW':7,
+            'WDWOV': 8,
             'JPEGQ': 10,
-            'NBADC': 35
+            'TEXPMS': 11,
+            'RBIN': 15,
+            'CBIN': 16,
+            'GAIN': 17,
+            'GAINOV': 19,
+            'NFLUSH': 21,
+            'NRSKIP': 23,
+            'NRBIN': 25,
+            'NROW': 27,
+            'NCSKIP': 29,
+            'NCBIN': 31,
+            'NCOL': 33,
+            'NBC': 35
             }
         self.ccdDataLengths = {
             'CCDSEL': 1,
             'EXPTS': 4,
             'EXPTSS': 2,
             'WDW': 1,
+            'WDWOV': 2,
             'JPEGQ': 1,
-            'NBADC': 2
+            'TEXPMS': 4,
+            'RBIN': 1,
+            'CBIN': 1,
+            'GAIN': 2,
+            'GAINOV': 2,
+            'NFLUSH': 2,
+            'NRSKIP': 2,
+            'NRBIN': 2,
+            'NROW': 2,
+            'NCSKIP': 2,
+            'NCBIN': 2,
+            'NCOL': 2,
+            'NBC': 2
         }
-        self.ccdPacketRid=21
+        self.ccdSelect = 0
+        self.exposureStart = 0
+        self.exposureFraction = 0
+        self.windowMode = 0
+        self.windowOverflow = 0
+        self.jpegQuality = 99
+        self.exposureTime = 0.0
+        self.rowBin = 0
+        self.colBin = 0
+        self.gain = 0
+        self.gainOverflow = 0
+        self.nflush = 0
+        self.nRowSkip = 0
+        self.nRowBin = 0
+        self.nRows = 0
+        self.nColSkip = 0
+        self.nColBin = 0
+        self.nCols = 0
+        self.nBadCols = 0
+        
+        
+        self.ccdPacketRid= 21
         self.totalCCDs = 7
         self.totalCcdPackets = 0
-        self.jpegQuality = 99
+        
         
     def process_queue(self):
         if not self.snifferStopEvent.is_set():
@@ -446,40 +495,117 @@ class matsViewer(tkinter.Tk):
                     
                     #Handle data stretched over several packets, such as image data, strip header/context data from first packet
                     if groupFlag == 1 or groupFlag == 3:
-                        #print("Start packet found")
+                        print("Start packet found")
                         
                         #Extract & display header information
-                        ccdSelect = struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['CCDSEL']:ridLength+self.ccdDataByteOffset['CCDSEL']+self.ccdDataLengths['CCDSEL']])[0]                        
-                        self.ccdSelectLabel.configure(text=("CCD#: " + str(ccdSelect)))
+                        self.ccdSelect = struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['CCDSEL']:ridLength+self.ccdDataByteOffset['CCDSEL']+self.ccdDataLengths['CCDSEL']])[0]                        
+                        self.ccdSelectLabel.configure(text=("CCD#: " + str(self.ccdSelect)))
                         
-                        exposureTime = struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['EXPTS']:ridLength+self.ccdDataByteOffset['EXPTS']+self.ccdDataLengths['EXPTS']])[0]                        
-                        exposureFraction = struct.unpack('>H',packet['payload'][ridLength+self.ccdDataByteOffset['EXPTSS']:ridLength+self.ccdDataByteOffset['EXPTSS']+self.ccdDataLengths['EXPTSS']])[0]                        
-                        self.imageScetLabel.configure(text=("Exposure Start#: " + str(exposureTime + exposureFraction/65535.0)))
+                        self.exposureStart = struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['EXPTS']:ridLength+self.ccdDataByteOffset['EXPTS']+self.ccdDataLengths['EXPTS']])[0]                        
+                        self.imageScetLabel.configure(text=("Exposure Start#: " + str(self.exposureStart)))
+                        
+                        self.exposureFraction = struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['EXPTSS']:ridLength+self.ccdDataByteOffset['EXPTSS']+self.ccdDataLengths['EXPTSS']])[0]                        
+                        self.exposureFractionLabel.configure(text=("Exposure Subsec: " + str(self.exposureFraction)))
+                        #self.exposureStart= float(exposureStart) + float(exposureFraction)/65535.0
+                        
+                        
+                        self.wdwMode =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['WDW']:ridLength+self.ccdDataByteOffset['WDW']+self.ccdDataLengths['WDW']])[0]                        
+                        self.WindowLabel.configure(text=("Window Mode: " + str(self.wdwMode)))
+
+                        self.windowOverflow =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['WDWOV']:ridLength+self.ccdDataByteOffset['WDWOV']+self.ccdDataLengths['WDWOV']])[0]                        
+                        self.OverflowLabel.configure(text=("Overflow Counter (OBC): " + str(self.windowOverflow)))
                         
                         self.jpegQuality =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['JPEGQ']:ridLength+self.ccdDataByteOffset['JPEGQ']+self.ccdDataLengths['JPEGQ']])[0]                        
                         self.jpegQualityLabel.configure(text=("JPEG Quality: " + str(self.jpegQuality)))
                         
-                        badColumns =  struct.unpack('>H',packet['payload'][ridLength+self.ccdDataByteOffset['NBADC']:ridLength+self.ccdDataByteOffset['NBADC']+self.ccdDataLengths['NBADC']])[0]                        
-                        self.NBCLabel.configure(text=("Number of bad columns: " + str(badColumns)))
+                        self.exposureTime  = struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']+2:ridLength+self.ccdDataByteOffset['TEXPMS']+self.ccdDataLengths['TEXPMS']] 
+                        + packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']:ridLength+self.ccdDataByteOffset['TEXPMS']+2])[0]
+                        self.exposureTimeLabel.configure(text=("Exposure time (ms): " + str(self.exposureTime)))
                         
-                        self.imageData=packet['payload'][ridLength+headerSize+2*badColumns:]
+                        self.rowBin =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['RBIN']:ridLength+self.ccdDataByteOffset['RBIN']+self.ccdDataLengths['RBIN']])[0]                        
+                        self.RbinLabel.configure(text=("Row binning mode: " + str(self.rowBin)))
+
+                        self.colBin =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['CBIN']:ridLength+self.ccdDataByteOffset['CBIN']+self.ccdDataLengths['CBIN']])[0]                        
+                        self.CbinLabel.configure(text=("Column binning mode: " + str(self.colBin)))
+
+                        self.gain =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['GAIN']:ridLength+self.ccdDataByteOffset['GAIN']+self.ccdDataLengths['GAIN']])[0]                        
+                        self.GainLabel.configure(text=("Gain: " + str(self.gain)))                        
+                        
+                        self.gainOverflow =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['GAINOV']:ridLength+self.ccdDataByteOffset['GAINOV']+self.ccdDataLengths['GAINOV']])[0]                        
+                        self.GainOvLabel.configure(text=("Number of overflows (CCD): " + str(self.gainOverflow)))                        
+
+                        self.nflush =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NFLUSH']:ridLength+self.ccdDataByteOffset['NFLUSH']+self.ccdDataLengths['NFLUSH']])[0]                        
+                        self.NFlushLabel.configure(text=("Number of Flushes: " + str(self.nflush)))   
+
+                        self.nRowSkip =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NRSKIP']:ridLength+self.ccdDataByteOffset['NRSKIP']+self.ccdDataLengths['NRSKIP']])[0]                        
+                        self.NRSkipLabel.configure(text=("Number of rows to skip: " + str(self.nRowSkip)))   
+
+                        self.nRowBin =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NRBIN']:ridLength+self.ccdDataByteOffset['NRBIN']+self.ccdDataLengths['NRBIN']])[0]                        
+                        self.NRBinLabel.configure(text=("Number of rows to bin: " + str(self.nRowBin)))  
+
+                        self.nRows =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NROW']:ridLength+self.ccdDataByteOffset['NROW']+self.ccdDataLengths['NROW']])[0]                        
+                        self.NRowLabel.configure(text=("Number of rows: " + str(self.nRows)))  
+
+                        self.nColSkip =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NCSKIP']:ridLength+self.ccdDataByteOffset['NCSKIP']+self.ccdDataLengths['NCSKIP']])[0]                        
+                        self.NCSkipLabel.configure(text=("Number of columns to skip: " + str(self.nColSkip)))   
+
+                        self.nColBin =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NCBIN']:ridLength+self.ccdDataByteOffset['NCBIN']+self.ccdDataLengths['NCBIN']])[0]                        
+                        self.NCBinLabel.configure(text=("Number of columns to bin: " + str(self.nColBin)))  
+
+                        self.nCols =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NCOL']:ridLength+self.ccdDataByteOffset['NCOL']+self.ccdDataLengths['NCOL']])[0]                        
+                        self.NColLabel.configure(text=("Number of columns: " + str(self.nCols)))  
+                        
+                        self.nBadCols =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NBC']:ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']])[0]                        
+                        self.NBCLabel.configure(text=("Number of bad columns: " + str(self.nBadCols)))
+                        
+                        self.imageData=packet['payload'][ridLength+headerSize+2*self.nBadCols:]
                         
                     elif groupFlag == 0 or groupFlag == 2:
                         #print("Mid packet")
                         self.imageData+=packet['payload'][ridLength:]
                     
                     if groupFlag == 2 or groupFlag == 3:
-                        #print("Stand-alone or end packet ")                        
-                        self.saveToJpeg(sequenceCounter)
+                        print("Stand-alone or end packet ")                        
+                        if self.jpegQuality <= 100:
+                            self.saveToJpeg(sequenceCounter)
+                        else:
+                            self.saveToPnm(sequenceCounter)
                         self.imageData=bytes()
+                        self.saveToTxt(sequenceCounter)
                     
                     self.totalCcdPackets+=1
                     self.totalPayloadPackets.configure(text=("Total Packets: " + str(self.totalCcdPackets)))
                 
-                self.after(100,self.process_queue)
+                self.process_queue()
+                #self.after(100,self.process_queue)
             except queue.Empty:
                 self.after(100,self.process_queue)
 
+    def saveToTxt(self,sequenceNo):
+        fileName = self.outputDir + "output" + str(sequenceNo) + ".txt"
+        text_file = open(fileName, "w")
+        text_file.write("CCDSEL: %s \n" % self.ccdSelect)
+        text_file.write("EXPTS: %s \n" % self.exposureStart)
+        text_file.write("EXPTSS: %s \n" % self.exposureFraction)
+        text_file.write("WDW: %s \n" % self.windowMode)
+        text_file.write("WDWOV: %s \n" % self.windowOverflow)
+        text_file.write("JPEGQ: %s \n" % self.jpegQuality)
+        text_file.write("TEXPMS: %s \n" % self.exposureTime)
+        text_file.write("RBIN: %s \n" % self.rowBin)
+        text_file.write("CBIN: %s \n" % self.colBin)
+        text_file.write("GAIN: %s \n" % self.gain)
+        text_file.write("GAINOV: %s \n" % self.gainOverflow)
+        text_file.write("NFLUSH: %s \n" % self.nflush)
+        text_file.write("NRSKIP: %s \n" % self.nRowSkip)
+        text_file.write("NRBIN: %s \n" % self.nRowBin)
+        text_file.write("NROW: %s \n" % self.nRows)
+        text_file.write("NCSKIP: %s \n" % self.nColSkip)
+        text_file.write("NCBIN: %s \n" % self.nColBin)
+        text_file.write("NCOL: %s \n" % self.nCols)
+        text_file.write("NBC: %s \n" % self.nBadCols)
+        
+        text_file.close()  
+    
     #Save jpeg image to file
     def saveToJpeg(self,sequenceNo):
         writeFormat = 'wb'
@@ -490,12 +616,33 @@ class matsViewer(tkinter.Tk):
         f.close()
         self.imageData=bytes()
         self.convertAndDisplayImage(fileName)
+
+    #Save raw image to pnm file
+    def saveToPnm(self,sequenceNo):
+        fileName = self.outputDir + "rawoutput" + str(sequenceNo) + ".pnm"
+        f=open(fileName,"wb")
+        #TODO get the size of the image
+        imsize = (self.nRows, self.nCols + 1 )
+        pnm_header = "P5\n"+str(imsize[1])+" "+str(imsize[0])+"\n65535\n"
+        f.write(bytearray(pnm_header, "utf8"))
+        
+        # Make the image a proper pnm file
+        data = np.frombuffer(self.imageData, dtype=np.uint16)
+
+        # And save it
+        f.write(data.byteswap().tobytes())
+        f.close()
+        self.imageData=bytes()
+        # TODO display image as well
+
+        self.image = data.reshape(imsize) #reshape image
+        self.refresh_image()
        
     #Convert 12-bit jpeg to pgm & display image
     def convertAndDisplayImage(self,jpegFile):           
         outputFile= jpegFile[:-4] + ".pgm"   
         try:
-            if self.jpegQuality < 100:
+            if self.jpegQuality <= 100:
                 self.image = self.read12bit_jpeg(jpegFile) #read image       
             else:
                 self.image = self.read16bit_jpeg(jpegFile) #read image    
@@ -544,7 +691,7 @@ class matsViewer(tkinter.Tk):
         return im
     
     def read16bit_jpegfile(filename):
-        im_object = Image.open('test.jpg')
+        im_object = Image.open(filename)
         im = np.asarray(im_object)
         return im
         
