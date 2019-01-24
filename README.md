@@ -3,7 +3,9 @@ Image viewer used for interfacing with the payload on ground
 
 # Requirements
 libjpeg (https://sourceforge.net/projects/libjpeg/files/libjpeg/6b/)
+
 python 3.5+
+
 ramses python library (download from box)
 
 # Installation

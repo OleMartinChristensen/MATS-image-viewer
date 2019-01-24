@@ -652,11 +652,7 @@ class matsViewer(tkinter.Tk):
     def convertAndDisplayImage(self,jpegFile):           
         outputFile= jpegFile[:-4] + ".pgm"   
         try:
-            if self.jpegQuality <= 100:
-                self.image = self.read12bit_jpeg(jpegFile) #read image       
-            else:
-                self.image = self.read16bit_jpeg(jpegFile) #read image    
-            
+            self.image = self.read12bit_jpeg(jpegFile) #read image       
             self.refresh_image()           
             
         except:
@@ -700,11 +696,7 @@ class matsViewer(tkinter.Tk):
         im = im.reshape(imsize) #reshape image
         return im
     
-    def read16bit_jpegfile(filename):
-        im_object = Image.open(filename)
-        im = np.asarray(im_object)
-        return im
-        
+
     
         
 #----------------- Main function ----------------
