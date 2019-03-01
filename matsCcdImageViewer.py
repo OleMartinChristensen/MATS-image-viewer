@@ -64,6 +64,26 @@ class matsViewer(tkinter.Tk):
         self.outputDir = "PayloadImages/"
         
     def initialize(self,parent):
+
+        self.ccdSelect = 0
+        self.exposureStart = 0
+        self.exposureFraction = 0
+        self.wdwMode = 0
+        self.windowOverflow = 0
+        self.jpegQuality = 99
+        self.exposureTime = 0.0
+        self.rowBin = 0
+        self.colBin = 0
+        self.gain = 0
+        self.gainOverflow = 0
+        self.nflush = 0
+        self.nRowSkip = 0
+        self.nRowBin = 0
+        self.nRows = 0
+        self.nColSkip = 0
+        self.nColBin = 0
+        self.nCols = 0
+        self.nBadCols = 0
     
         ########### --Layout frames-- ##########    
         self.myContainer1 = Frame(parent)
@@ -327,7 +347,7 @@ class matsViewer(tkinter.Tk):
         self.stopButton.config(state=NORMAL)
         self.subplot.imshow(self.image)
         #Create queue and start capture thread
-        self.queue = queue.Queue()
+        self.queue = queue.Queue(maxsize=0)
         self.snifferStopEvent = threading.Event()
         self.snifferThread = ThreadedTask(self.snifferStopEvent,self.queue, self.TmStream, 558, 100, 128, 25)
         self.snifferThread.daemon = True
@@ -344,6 +364,7 @@ class matsViewer(tkinter.Tk):
         self.startButton.config(state=NORMAL)
         self.stopButton.config(state=DISABLED)
         
+        #self.after(0, self.process_queue)
         self.snifferStopEvent.set()
 
     def bit12ButtonClick(self):
@@ -447,25 +468,6 @@ class matsViewer(tkinter.Tk):
             'NCOL': 2,
             'NBC': 2
         }
-        self.ccdSelect = 0
-        self.exposureStart = 0
-        self.exposureFraction = 0
-        self.windowMode = 0
-        self.windowOverflow = 0
-        self.jpegQuality = 99
-        self.exposureTime = 0.0
-        self.rowBin = 0
-        self.colBin = 0
-        self.gain = 0
-        self.gainOverflow = 0
-        self.nflush = 0
-        self.nRowSkip = 0
-        self.nRowBin = 0
-        self.nRows = 0
-        self.nColSkip = 0
-        self.nColBin = 0
-        self.nCols = 0
-        self.nBadCols = 0
         
         
         self.ccdPacketRid= 21
@@ -492,11 +494,11 @@ class matsViewer(tkinter.Tk):
                     groupFlag = packet['sequence_control']>>14
                     sequenceCounter = packet['sequence_control']&0x3fff     
                     #print(packet['payload'])
-                    
+                    print(sequenceCounter)
                     #Handle data stretched over several packets, such as image data, strip header/context data from first packet
                     if groupFlag == 1 or groupFlag == 3:
                         print("Start packet found")
-						
+                        
                         #Extract & display header information
                         self.ccdSelect = struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['CCDSEL']:ridLength+self.ccdDataByteOffset['CCDSEL']+self.ccdDataLengths['CCDSEL']])[0]                        
                         self.ccdSelectLabel.configure(text=("CCD#: " + str(self.ccdSelect)))
@@ -518,8 +520,9 @@ class matsViewer(tkinter.Tk):
                         self.jpegQuality =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['JPEGQ']:ridLength+self.ccdDataByteOffset['JPEGQ']+self.ccdDataLengths['JPEGQ']])[0]                        
                         self.jpegQualityLabel.configure(text=("JPEG Quality: " + str(self.jpegQuality)))
                         
-                        self.exposureTime  = struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']+2:ridLength+self.ccdDataByteOffset['TEXPMS']+self.ccdDataLengths['TEXPMS']] 
-                        + packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']:ridLength+self.ccdDataByteOffset['TEXPMS']+2])[0]
+                        #self.exposureTime  = struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']+2:ridLength+self.ccdDataByteOffset['TEXPMS']+self.ccdDataLengths['TEXPMS']] 
+                        #+ packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']:ridLength+self.ccdDataByteOffset['TEXPMS']+2])[0]
+                        self.exposureTime =  struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']:ridLength+self.ccdDataByteOffset['TEXPMS']+self.ccdDataLengths['TEXPMS']])[0]
                         self.exposureTimeLabel.configure(text=("Exposure time (ms): " + str(self.exposureTime)))
                         
                         self.rowBin =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['RBIN']:ridLength+self.ccdDataByteOffset['RBIN']+self.ccdDataLengths['RBIN']])[0]                        
@@ -560,22 +563,12 @@ class matsViewer(tkinter.Tk):
                         
                         self.imageData=packet['payload'][ridLength+headerSize+2*self.nBadCols:]
                         
-						sequenceCounter_old = sequenceCounter
-						
                     elif groupFlag == 0 or groupFlag == 2:
                         #print("Mid packet")
-						if sequenceCounter != sequenceCounter_old+1: #Check if packets are in order							
-							print("WARNING: packets out of order!")
-						sequenceCounter_old = sequenceCounter #update counter
-						self.imageData+=packet['payload'][ridLength:]
+                        self.imageData+=packet['payload'][ridLength:]
                     
                     if groupFlag == 2 or groupFlag == 3:
-                        print("Stand-alone or end packet ")
-
-						if sequenceCounter != sequenceCounter_old+1: #Check if packets are in order							
-							print("WARNING: packets out of order!")
-						sequenceCounter_old = sequenceCounter #update counter
-						
+                        print("Stand-alone or end packet ")                        
                         if self.jpegQuality <= 100:
                             self.saveToJpeg(sequenceCounter)
                         else:
@@ -597,9 +590,10 @@ class matsViewer(tkinter.Tk):
         text_file.write("CCDSEL: %s \n" % self.ccdSelect)
         text_file.write("EXPTS: %s \n" % self.exposureStart)
         text_file.write("EXPTSS: %s \n" % self.exposureFraction)
-        text_file.write("WDW: %s \n" % self.windowMode)
+        text_file.write("WDW: %s \n" % self.wdwMode)
         text_file.write("WDWOV: %s \n" % self.windowOverflow)
         text_file.write("JPEGQ: %s \n" % self.jpegQuality)
+        print(self.wdwMode)
         text_file.write("TEXPMS: %s \n" % self.exposureTime)
         text_file.write("RBIN: %s \n" % self.rowBin)
         text_file.write("CBIN: %s \n" % self.colBin)
@@ -652,7 +646,11 @@ class matsViewer(tkinter.Tk):
     def convertAndDisplayImage(self,jpegFile):           
         outputFile= jpegFile[:-4] + ".pgm"   
         try:
-            self.image = self.read12bit_jpeg(jpegFile) #read image       
+            if self.jpegQuality <= 100:
+                self.image = self.read12bit_jpeg(jpegFile) #read image       
+            else:
+                self.image = self.read16bit_jpeg(jpegFile) #read image    
+            
             self.refresh_image()           
             
         except:
@@ -696,7 +694,11 @@ class matsViewer(tkinter.Tk):
         im = im.reshape(imsize) #reshape image
         return im
     
-
+    def read16bit_jpegfile(filename):
+        im_object = Image.open(filename)
+        im = np.asarray(im_object)
+        return im
+        
     
         
 #----------------- Main function ----------------
