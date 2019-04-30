@@ -71,18 +71,25 @@ class matsViewer(tkinter.Tk):
         self.wdwMode = 0
         self.windowOverflow = 0
         self.jpegQuality = 99
-        self.exposureTime = 0.0
-        self.rowBin = 0
-        self.colBin = 0
-        self.gain = 0
-        self.gainOverflow = 0
-        self.nflush = 0
-        self.nRowSkip = 0
-        self.nRowBin = 0
+        self.frame = 0
         self.nRows = 0
-        self.nColSkip = 0
-        self.nColBin = 0
+        self.nRowBin = 0
+        self.nRowSkip = 0
         self.nCols = 0
+        self.nColBin = 0
+        self.nColSkip = 0
+        self.nflush = 0
+        self.exposureTime = 0.0
+        self.gain = 0
+        self.temp = 0
+        self.fbinov = 0
+        self.lblnk = 0
+        self.tblnk = 0
+        self.zero= 0
+        self.timing1 = 0
+        self.timing2 = 0
+        self.version = 0
+        self.timing3 = 0
         self.nBadCols = 0
     
         ########### --Layout frames-- ##########    
@@ -285,11 +292,11 @@ class matsViewer(tkinter.Tk):
         self.exposureTimeLabel=Label(self.ccdImageInfoFrame,text="Exposure time (ms): ", justify="left")
         self.exposureTimeLabel.grid(row=6, column=0)
         
-        self.RbinLabel=Label(self.ccdImageInfoFrame,text="Row binning mode: ", justify="left")
-        self.RbinLabel.grid(row=7, column=0)
+        self.LeadBlanksLabel=Label(self.ccdImageInfoFrame,text="Leading blanks: ", justify="left")
+        self.LeadBlanksLabel.grid(row=7, column=0)
         
-        self.CbinLabel=Label(self.ccdImageInfoFrame,text="Column binning mode: ", justify="left")
-        self.CbinLabel.grid(row=8, column=0)
+        self.TrailBlanksLabel=Label(self.ccdImageInfoFrame,text="Trailing Blanks: ", justify="left")
+        self.TrailBlanksLabel.grid(row=8, column=0)
         
         self.GainLabel=Label(self.ccdImageInfoFrame,text="Gain: ", justify="left")
         self.GainLabel.grid(row=9, column=0)
@@ -433,41 +440,58 @@ class matsViewer(tkinter.Tk):
             'WDW':7,
             'WDWOV': 8,
             'JPEGQ': 10,
-            'TEXPMS': 11,
-            'RBIN': 15,
-            'CBIN': 16,
-            'GAIN': 17,
-            'GAINOV': 19,
-            'NFLUSH': 21,
-            'NRSKIP': 23,
-            'NRBIN': 25,
-            'NROW': 27,
-            'NCSKIP': 29,
-            'NCBIN': 31,
-            'NCOL': 33,
-            'NBC': 35
+            'FRAME': 11,
+            'NROW': 13,
+            'NRBIN': 15,
+            'NRSKIP': 17,
+            'NCOL': 19,
+            'NCBIN': 21,
+            'NCSKIP': 23,
+            'NFLUSH': 25,
+            'TEXPMS': 27,
+            'GAIN': 31,
+            'TEMP': 33,
+            'FBINOV': 35,
+            'LBLNK': 37,
+            'TBLNK': 39,
+            'ZERO': 41,
+            'TIMING1': 43,
+            'TIMING2': 45,
+            'VERSION': 47,
+            'TIMING3': 49,
+            'NBC': 51,
+            'BC': 53
             }
+        
         self.ccdDataLengths = {
             'CCDSEL': 1,
             'EXPTS': 4,
             'EXPTSS': 2,
-            'WDW': 1,
+            'WDW':1,
             'WDWOV': 2,
             'JPEGQ': 1,
-            'TEXPMS': 4,
-            'RBIN': 1,
-            'CBIN': 1,
-            'GAIN': 2,
-            'GAINOV': 2,
-            'NFLUSH': 2,
-            'NRSKIP': 2,
-            'NRBIN': 2,
+            'FRAME': 2,
             'NROW': 2,
-            'NCSKIP': 2,
-            'NCBIN': 2,
+            'NRBIN': 2,
+            'NRSKIP': 2,
             'NCOL': 2,
-            'NBC': 2
-        }
+            'NCBIN': 2,
+            'NCSKIP': 2,
+            'NFLUSH': 2,
+            'TEXPMS': 2,
+            'GAIN': 2,
+            'TEMP': 2,
+            'FBINOV': 2,
+            'LBLNK': 2,
+            'TBLNK': 2,
+            'ZERO': 2,
+            'TIMING1': 2,
+            'TIMING2': 2,
+            'VERSION': 2,
+            'TIMING3': 2,
+            'NBC': 2,
+            'BC': 0 #will be set later after NBC is decoded
+            }
         
         
         self.ccdPacketRid= 21
@@ -490,7 +514,7 @@ class matsViewer(tkinter.Tk):
                 rid=struct.unpack('>H',packet['payload'][:ridLength])[0]
                 
                 #Only process CCD image data packets
-                if rid >= self.ccdPacketRid and rid < self.ccdPacketRid + self.totalCCDs:
+                if rid >= self.ccdPacketRid and rid < self.ccdPacketRid + (self.totalCCDs-1) and packet_type == 'TM':
                     groupFlag = packet['sequence_control']>>14
                     sequenceCounter = packet['sequence_control']&0x3fff     
                     #print(packet['payload'])
@@ -522,42 +546,55 @@ class matsViewer(tkinter.Tk):
                         
                         #self.exposureTime  = struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']+2:ridLength+self.ccdDataByteOffset['TEXPMS']+self.ccdDataLengths['TEXPMS']] 
                         #+ packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']:ridLength+self.ccdDataByteOffset['TEXPMS']+2])[0]
-                        self.exposureTime =  struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']:ridLength+self.ccdDataByteOffset['TEXPMS']+self.ccdDataLengths['TEXPMS']])[0]
-                        self.exposureTimeLabel.configure(text=("Exposure time (ms): " + str(self.exposureTime)))
                         
-                        self.rowBin =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['RBIN']:ridLength+self.ccdDataByteOffset['RBIN']+self.ccdDataLengths['RBIN']])[0]                        
-                        self.RbinLabel.configure(text=("Row binning mode: " + str(self.rowBin)))
-
-                        self.colBin =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['CBIN']:ridLength+self.ccdDataByteOffset['CBIN']+self.ccdDataLengths['CBIN']])[0]                        
-                        self.CbinLabel.configure(text=("Column binning mode: " + str(self.colBin)))
-
-                        self.gain =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['GAIN']:ridLength+self.ccdDataByteOffset['GAIN']+self.ccdDataLengths['GAIN']])[0]                        
-                        self.GainLabel.configure(text=("Gain: " + str(self.gain)))                        
-                        
-                        self.gainOverflow =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['GAINOV']:ridLength+self.ccdDataByteOffset['GAINOV']+self.ccdDataLengths['GAINOV']])[0]                        
-                        self.GainOvLabel.configure(text=("Number of overflows (CCD): " + str(self.gainOverflow)))                        
-
-                        self.nflush =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NFLUSH']:ridLength+self.ccdDataByteOffset['NFLUSH']+self.ccdDataLengths['NFLUSH']])[0]                        
-                        self.NFlushLabel.configure(text=("Number of Flushes: " + str(self.nflush)))   
-
-                        self.nRowSkip =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NRSKIP']:ridLength+self.ccdDataByteOffset['NRSKIP']+self.ccdDataLengths['NRSKIP']])[0]                        
-                        self.NRSkipLabel.configure(text=("Number of rows to skip: " + str(self.nRowSkip)))   
-
-                        self.nRowBin =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NRBIN']:ridLength+self.ccdDataByteOffset['NRBIN']+self.ccdDataLengths['NRBIN']])[0]                        
-                        self.NRBinLabel.configure(text=("Number of rows to bin: " + str(self.nRowBin)))  
+                        self.frame =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['FRAME']:ridLength+self.ccdDataByteOffset['FRAME']+self.ccdDataLengths['FRAME']])[0]                        
 
                         self.nRows =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NROW']:ridLength+self.ccdDataByteOffset['NROW']+self.ccdDataLengths['NROW']])[0]                        
                         self.NRowLabel.configure(text=("Number of rows: " + str(self.nRows)))  
 
-                        self.nColSkip =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NCSKIP']:ridLength+self.ccdDataByteOffset['NCSKIP']+self.ccdDataLengths['NCSKIP']])[0]                        
-                        self.NCSkipLabel.configure(text=("Number of columns to skip: " + str(self.nColSkip)))   
+                        self.nRowBin =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NRBIN']:ridLength+self.ccdDataByteOffset['NRBIN']+self.ccdDataLengths['NRBIN']])[0]                        
+                        self.NRBinLabel.configure(text=("Number of rows to bin: " + str(self.nRowBin)))  
+
+                        self.nRowSkip =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NRSKIP']:ridLength+self.ccdDataByteOffset['NRSKIP']+self.ccdDataLengths['NRSKIP']])[0]                        
+                        self.NRSkipLabel.configure(text=("Number of rows to skip: " + str(self.nRowSkip)))   
+
+                        self.nCols =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NCOL']:ridLength+self.ccdDataByteOffset['NCOL']+self.ccdDataLengths['NCOL']])[0]                        
+                        self.NColLabel.configure(text=("Number of columns: " + str(self.nCols)))  
 
                         self.nColBin =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NCBIN']:ridLength+self.ccdDataByteOffset['NCBIN']+self.ccdDataLengths['NCBIN']])[0]                        
                         self.NCBinLabel.configure(text=("Number of columns to bin: " + str(self.nColBin)))  
 
-                        self.nCols =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NCOL']:ridLength+self.ccdDataByteOffset['NCOL']+self.ccdDataLengths['NCOL']])[0]                        
-                        self.NColLabel.configure(text=("Number of columns: " + str(self.nCols)))  
+                        self.nColSkip =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NCSKIP']:ridLength+self.ccdDataByteOffset['NCSKIP']+self.ccdDataLengths['NCSKIP']])[0]                        
+                        self.NCSkipLabel.configure(text=("Number of columns to skip: " + str(self.nColSkip)))   
+
+                        self.nflush =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NFLUSH']:ridLength+self.ccdDataByteOffset['NFLUSH']+self.ccdDataLengths['NFLUSH']])[0]                        
+                        self.NFlushLabel.configure(text=("Number of Flushes: " + str(self.nflush)))                          
                         
+                        self.exposureTime =  struct.unpack('I',packet['payload'][ridLength+self.ccdDataByteOffset['TEXPMS']:ridLength+self.ccdDataByteOffset['TEXPMS']+self.ccdDataLengths['TEXPMS']])[0]
+                        self.exposureTimeLabel.configure(text=("Exposure time (ms): " + str(self.exposureTime)))
+
+                        self.gain =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['GAIN']:ridLength+self.ccdDataByteOffset['GAIN']+self.ccdDataLengths['GAIN']])[0]                        
+                        self.GainLabel.configure(text=("Gain: " + str(self.gain)))    
+
+                        self.temp =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TEMP']:ridLength+self.ccdDataByteOffset['TEMP']+self.ccdDataLengths['TEMP']])[0]                        
+                        self.RbinLabel.configure(text=("Temp: " + str(self.rowBin)))
+
+                        self.fbinov =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['FBINOV']:ridLength+self.ccdDataByteOffset['FBINOV']+self.ccdDataLengths['FBINOV']])[0]                        
+                        self.GainOvLabel.configure(text=("Number of overflows (FPGA): " + str(self.fbinov))) 
+                        
+                        
+                        self.lblnk =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['LBLNK']:ridLength+self.ccdDataByteOffset['LBLNK']+self.ccdDataLengths['LBLNK']])[0]                        
+                        self.LeadBlanksLabel.configure(text=("Trailing blanks: " + str(self.lblnk)))
+
+                        self.tblnk =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TBLNK']:ridLength+self.ccdDataByteOffset['TBLNK']+self.ccdDataLengths['TBLNK']])[0]                        
+                        self.TrailBlanksLabel.configure(text=("Leading blanks: " + str(self.tblnk)))
+                    
+                        self.zero =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['ZERO']:ridLength+self.ccdDataByteOffset['ZERO']+self.ccdDataLengths['ZERO']])[0]                                               
+                        self.timing1 =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING1']:ridLength+self.ccdDataByteOffset['TIMING1']+self.ccdDataLengths['TIMING1']])[0]                                               
+                        self.timing2 =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING2']:ridLength+self.ccdDataByteOffset['TIMING2']+self.ccdDataLengths['TIMING2']])[0]                                               
+                        self.version =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['VERSION']:ridLength+self.ccdDataByteOffset['VERSION']+self.ccdDataLengths['VERSION']])[0]                                               
+                        self.timing3 =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING3']:ridLength+self.ccdDataByteOffset['TIMING3']+self.ccdDataLengths['TIMING3']])[0]                                               
+ 
                         self.nBadCols =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NBC']:ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']])[0]                        
                         self.NBCLabel.configure(text=("Number of bad columns: " + str(self.nBadCols)))
                         
@@ -574,7 +611,7 @@ class matsViewer(tkinter.Tk):
                         else:
                             self.saveToPnm(sequenceCounter)
                         self.imageData=bytes()
-                        self.saveToTxt(sequenceCounter)
+                        #self.saveToTxt(sequenceCounter) FIXME: check save to txt
                     
                     self.totalCcdPackets+=1
                     self.totalPayloadPackets.configure(text=("Total Packets: " + str(self.totalCcdPackets)))
