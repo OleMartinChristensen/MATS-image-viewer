@@ -1,4 +1,4 @@
-################################################################################
+ ################################################################################
 # Python application for viewing MATS payload images
 #
 #   Version:        $Rev: 2276 $
@@ -478,7 +478,7 @@ class matsViewer(tkinter.Tk):
             'NCBIN': 2,
             'NCSKIP': 2,
             'NFLUSH': 2,
-            'TEXPMS': 2,
+            'TEXPMS': 4,
             'GAIN': 2,
             'TEMP': 2,
             'FBINOV': 2,
@@ -509,7 +509,7 @@ class matsViewer(tkinter.Tk):
                     packet_type = 'TM'                    
                 
                 ridLength = 2     
-                headerSize = 37                
+                headerSize = 53                
                 
                 rid=struct.unpack('>H',packet['payload'][:ridLength])[0]
                 
@@ -576,28 +576,32 @@ class matsViewer(tkinter.Tk):
                         self.gain =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['GAIN']:ridLength+self.ccdDataByteOffset['GAIN']+self.ccdDataLengths['GAIN']])[0]                        
                         self.GainLabel.configure(text=("Gain: " + str(self.gain)))    
 
-                        self.temp =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TEMP']:ridLength+self.ccdDataByteOffset['TEMP']+self.ccdDataLengths['TEMP']])[0]                        
-                        self.RbinLabel.configure(text=("Temp: " + str(self.rowBin)))
+                        self.temp =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['TEMP']:ridLength+self.ccdDataByteOffset['TEMP']+self.ccdDataLengths['TEMP']])[0]                        
 
                         self.fbinov =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['FBINOV']:ridLength+self.ccdDataByteOffset['FBINOV']+self.ccdDataLengths['FBINOV']])[0]                        
                         self.GainOvLabel.configure(text=("Number of overflows (FPGA): " + str(self.fbinov))) 
                         
                         
-                        self.lblnk =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['LBLNK']:ridLength+self.ccdDataByteOffset['LBLNK']+self.ccdDataLengths['LBLNK']])[0]                        
+                        self.lblnk =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['LBLNK']:ridLength+self.ccdDataByteOffset['LBLNK']+self.ccdDataLengths['LBLNK']])[0]                        
                         self.LeadBlanksLabel.configure(text=("Trailing blanks: " + str(self.lblnk)))
 
-                        self.tblnk =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TBLNK']:ridLength+self.ccdDataByteOffset['TBLNK']+self.ccdDataLengths['TBLNK']])[0]                        
+                        self.tblnk =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['TBLNK']:ridLength+self.ccdDataByteOffset['TBLNK']+self.ccdDataLengths['TBLNK']])[0]                        
                         self.TrailBlanksLabel.configure(text=("Leading blanks: " + str(self.tblnk)))
                     
-                        self.zero =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['ZERO']:ridLength+self.ccdDataByteOffset['ZERO']+self.ccdDataLengths['ZERO']])[0]                                               
-                        self.timing1 =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING1']:ridLength+self.ccdDataByteOffset['TIMING1']+self.ccdDataLengths['TIMING1']])[0]                                               
-                        self.timing2 =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING2']:ridLength+self.ccdDataByteOffset['TIMING2']+self.ccdDataLengths['TIMING2']])[0]                                               
-                        self.version =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['VERSION']:ridLength+self.ccdDataByteOffset['VERSION']+self.ccdDataLengths['VERSION']])[0]                                               
-                        self.timing3 =  struct.unpack('B',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING3']:ridLength+self.ccdDataByteOffset['TIMING3']+self.ccdDataLengths['TIMING3']])[0]                                               
+                        self.zero =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['ZERO']:ridLength+self.ccdDataByteOffset['ZERO']+self.ccdDataLengths['ZERO']])[0]                                               
+                        self.timing1 =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING1']:ridLength+self.ccdDataByteOffset['TIMING1']+self.ccdDataLengths['TIMING1']])[0]                                               
+                        self.timing2 =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING2']:ridLength+self.ccdDataByteOffset['TIMING2']+self.ccdDataLengths['TIMING2']])[0]                                               
+                        self.version =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['VERSION']:ridLength+self.ccdDataByteOffset['VERSION']+self.ccdDataLengths['VERSION']])[0]                                               
+                        self.timing3 =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['TIMING3']:ridLength+self.ccdDataByteOffset['TIMING3']+self.ccdDataLengths['TIMING3']])[0]                                               
  
                         self.nBadCols =  struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NBC']:ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']])[0]                        
                         self.NBCLabel.configure(text=("Number of bad columns: " + str(self.nBadCols)))
                         
+                        self.BadCols = np.array([1,self.nBadCols])
+                        print(self.BadCols.shape)
+                        for n in range(self.nBadCols):
+                            self.BadCols[n] = struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']+2*n:ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']+2*(n+1)])[0]                        
+						
                         self.imageData=packet['payload'][ridLength+headerSize+2*self.nBadCols:]
                         
                     elif groupFlag == 0 or groupFlag == 2:
@@ -611,7 +615,7 @@ class matsViewer(tkinter.Tk):
                         else:
                             self.saveToPnm(sequenceCounter)
                         self.imageData=bytes()
-                        #self.saveToTxt(sequenceCounter) FIXME: check save to txt
+                        self.saveToTxt(sequenceCounter)
                     
                     self.totalCcdPackets+=1
                     self.totalPayloadPackets.configure(text=("Total Packets: " + str(self.totalCcdPackets)))
@@ -630,19 +634,28 @@ class matsViewer(tkinter.Tk):
         text_file.write("WDW= %s \n" % self.wdwMode)
         text_file.write("WDWOV= %s \n" % self.windowOverflow)
         text_file.write("JPEGQ= %s \n" % self.jpegQuality)
-        text_file.write("TEXPMS= %s \n" % self.exposureTime)
-        text_file.write("RBIN= %s \n" % self.rowBin)
-        text_file.write("CBIN= %s \n" % self.colBin)
-        text_file.write("GAIN= %s \n" % self.gain)
-        text_file.write("GAINOV= %s \n" % self.gainOverflow)
-        text_file.write("NFLUSH= %s \n" % self.nflush)
-        text_file.write("NRSKIP= %s \n" % self.nRowSkip)
-        text_file.write("NRBIN= %s \n" % self.nRowBin)
+        text_file.write("FRAME= %s \n" % self.nRows )
         text_file.write("NROW= %s \n" % self.nRows)
-        text_file.write("NCSKIP= %s \n" % self.nColSkip)
-        text_file.write("NCBIN= %s \n" % self.nColBin)
+        text_file.write("NRBIN= %s \n" % self.nRowBin)
+        text_file.write("NRSKIP= %s \n" % self.nRowSkip)
         text_file.write("NCOL= %s \n" % self.nCols)
+        text_file.write("NCBIN= %s \n" % self.nColBin)
+        text_file.write("NCSKIP= %s \n" % self.nColSkip)
+        text_file.write("NFLUSH= %s \n" % self.nflush)
+        text_file.write("TEXPMS= %s \n" % self.exposureTime)
+        text_file.write("GAIN= %s \n" % self.gain)
+        text_file.write("TEMP= %s \n" % self.temp)
+        text_file.write("FBINOV= %s \n" % self.fbinov)
+        text_file.write("LBLNK= %s \n" % self.lblnk)
+        text_file.write("TBLNK= %s \n" % self.tblnk)
+        text_file.write("ZERO= %s \n" % self.zero)
+        text_file.write("TIMING1= %s \n" % self.timing1)
+        text_file.write("TIMING2= %s \n" % self.timing2)
+        text_file.write("VERSION= %s \n" % self.version)
+        text_file.write("TIMING3= %s \n" % self.timing3)
         text_file.write("NBC= %s \n" % self.nBadCols)
+        for n in range(self.nBadCols):
+            text_file.write("BC= %s \n" % self.BadCols[n])
         
         text_file.close()  
     
