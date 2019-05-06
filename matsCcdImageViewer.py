@@ -1,9 +1,9 @@
  ################################################################################
 # Python application for viewing MATS payload images
 #
-#   Version:        $Rev: 2276 $
-#   Last Edit       $Date: 2016-11-08 13:33:53 +0100 (ti, 08 nov 2016) $
-#   Last Edit by:   $Author: nah $
+#   Version:        $Rev: 5608 $
+#   Last Edit       $Date: 2019-05-06 13:30:31 +0200 (Mon, 06 May 2019) $
+#   Last Edit by:   $Author: nln $
 #
 ################################################################################
 
@@ -40,7 +40,7 @@ class ThreadedTask(threading.Thread):
         with sniffer.RamsesTmSniffer(self.stream) as tm_sniffer, sniffer.RamsesTcSniffer(self.stream) as tc_sniffer:
             all_sniffers = (tm_sniffer, tc_sniffer)
             while (not self.stopEvent.is_set()):
-                sniffer.wait_for_incoming_data(all_sniffers, 0.25)  # timeout given to be able to exit with Ctrl-C
+                sniffer.wait_for_incoming_data(all_sniffers, 0.05)  # timeout given to be able to exit with Ctrl-C
        
                 tc_packet = tc_sniffer.read(scid_filter=self.scid, apid_filter=self.apid, type_filter=self.type, subtype_filter=self.subType, invert_filter=None)
                 if tc_packet is not None:
