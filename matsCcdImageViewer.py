@@ -91,6 +91,7 @@ class matsViewer(tkinter.Tk):
         self.version = 0
         self.timing3 = 0
         self.nBadCols = 0
+        self.id = ''
     
         ########### --Layout frames-- ##########    
         self.myContainer1 = Frame(parent)
@@ -271,65 +272,68 @@ class matsViewer(tkinter.Tk):
 
        
         ########### --Labels-- ##########
-        self.ccdSelectLabel=Label(self.ccdImageInfoFrame,text="CCD#: ")
+        self.ccdSelectLabel=Label(self.ccdImageInfoFrame,text="ID: ")
         self.ccdSelectLabel.grid(row=0, column=0)
+
+        self.ccdSelectLabel=Label(self.ccdImageInfoFrame,text="CCD#: ")
+        self.ccdSelectLabel.grid(row=1, column=0)
         
         self.imageScetLabel=Label(self.ccdImageInfoFrame,text="Exposure Sec: ", justify="left")
-        self.imageScetLabel.grid(row=1, column=0)
+        self.imageScetLabel.grid(row=2, column=0)
 
         self.exposureFractionLabel=Label(self.ccdImageInfoFrame,text="Exposure Subsec: ", justify="left")
-        self.exposureFractionLabel.grid(row=2, column=0)
+        self.exposureFractionLabel.grid(row=3, column=0)
         
         self.WindowLabel=Label(self.ccdImageInfoFrame,text="Window Mode: ", justify="left")
-        self.WindowLabel.grid(row=3, column=0)
+        self.WindowLabel.grid(row=4, column=0)
 
         self.OverflowLabel=Label(self.ccdImageInfoFrame,text="Overflow Counter (OBC): ", justify="left")
-        self.OverflowLabel.grid(row=4, column=0)
+        self.OverflowLabel.grid(row=5, column=0)
      
         self.jpegQualityLabel=Label(self.ccdImageInfoFrame,text="JPEG Quality: ", justify="left")
-        self.jpegQualityLabel.grid(row=5, column=0)
+        self.jpegQualityLabel.grid(row=6, column=0)
         
         self.exposureTimeLabel=Label(self.ccdImageInfoFrame,text="Exposure time (ms): ", justify="left")
-        self.exposureTimeLabel.grid(row=6, column=0)
+        self.exposureTimeLabel.grid(row=7, column=0)
         
         self.LeadBlanksLabel=Label(self.ccdImageInfoFrame,text="Leading blanks: ", justify="left")
-        self.LeadBlanksLabel.grid(row=7, column=0)
+        self.LeadBlanksLabel.grid(row=8, column=0)
         
         self.TrailBlanksLabel=Label(self.ccdImageInfoFrame,text="Trailing Blanks: ", justify="left")
-        self.TrailBlanksLabel.grid(row=8, column=0)
+        self.TrailBlanksLabel.grid(row=9, column=0)
         
         self.GainLabel=Label(self.ccdImageInfoFrame,text="Gain: ", justify="left")
-        self.GainLabel.grid(row=9, column=0)
+        self.GainLabel.grid(row=10, column=0)
         
         self.GainOvLabel=Label(self.ccdImageInfoFrame,text="Number of overflows (CCD): ", justify="left")
-        self.GainOvLabel.grid(row=10, column=0)
+        self.GainOvLabel.grid(row=11, column=0)
         
         self.NFlushLabel=Label(self.ccdImageInfoFrame,text="Number of flushes: ", justify="left")
-        self.NFlushLabel.grid(row=11, column=0)
+        self.NFlushLabel.grid(row=12, column=0)
         
         self.NRSkipLabel=Label(self.ccdImageInfoFrame,text="Number of rows to skip: ", justify="left")
-        self.NRSkipLabel.grid(row=12, column=0)
+        self.NRSkipLabel.grid(row=13, column=0)
         
         self.NRBinLabel=Label(self.ccdImageInfoFrame,text="Number of rows to bin: ", justify="left")
-        self.NRBinLabel.grid(row=13, column=0)
+        self.NRBinLabel.grid(row=14, column=0)
         
         self.NRowLabel=Label(self.ccdImageInfoFrame,text="Number of rows: ", justify="left")
-        self.NRowLabel.grid(row=14, column=0)
+        self.NRowLabel.grid(row=15, column=0)
         
         self.NCSkipLabel=Label(self.ccdImageInfoFrame,text="Number of columns to skip: ", justify="left")
-        self.NCSkipLabel.grid(row=15, column=0)
+        self.NCSkipLabel.grid(row=16, column=0)
         
         self.NCBinLabel=Label(self.ccdImageInfoFrame,text="Number of columns to bin: ", justify="left")
-        self.NCBinLabel.grid(row=16, column=0)
+        self.NCBinLabel.grid(row=17, column=0)
         
         self.NColLabel=Label(self.ccdImageInfoFrame,text="Number of columns: ", justify="left")
-        self.NColLabel.grid(row=17, column=0)
+        self.NColLabel.grid(row=18, column=0)
         
         self.NBCLabel=Label(self.ccdImageInfoFrame,text="Number of bad columns: ", justify="left")
-        self.NBCLabel.grid(row=18, column=0)
+        self.NBCLabel.grid(row=19, column=0)
         
         self.totalPayloadPackets=Label(self.ccdImageInfoFrame,text="Total Packets: ")
-        self.totalPayloadPackets.grid(row=19, column=0)
+        self.totalPayloadPackets.grid(row=20, column=0)
             
         ######## --Image output -- #########
         self.image=np.zeros([1,1],dtype='uint16')
@@ -598,7 +602,9 @@ class matsViewer(tkinter.Tk):
                         self.NBCLabel.configure(text=("Number of bad columns: " + str(self.nBadCols)))
                         
                         self.BadCols = np.array([1,self.nBadCols])
-                        print(self.BadCols.shape)
+                        
+                        self.id = str(self.exposureStart) + '_' + str(self.exposureFraction) + '_' + str(self.ccdSelect)
+                        #print(self.BadCols.shape)
                         for n in range(self.nBadCols):
                             self.BadCols[n] = struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']+2*n:ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']+2*(n+1)])[0]                        
 						
@@ -611,11 +617,11 @@ class matsViewer(tkinter.Tk):
                     if groupFlag == 2 or groupFlag == 3:
                         print("Stand-alone or end packet ")                        
                         if self.jpegQuality <= 100:
-                            self.saveToJpeg(sequenceCounter)
+                            self.saveToJpeg()
                         else:
-                            self.saveToPnm(sequenceCounter)
+                            self.saveToPnm()
                         self.imageData=bytes()
-                        self.saveToTxt(sequenceCounter)
+                        self.saveToTxt()
                     
                     self.totalCcdPackets+=1
                     self.totalPayloadPackets.configure(text=("Total Packets: " + str(self.totalCcdPackets)))
@@ -625,9 +631,10 @@ class matsViewer(tkinter.Tk):
             except queue.Empty:
                 self.after(100,self.process_queue)
 
-    def saveToTxt(self,sequenceNo):
-        fileName = self.outputDir + "output" + str(sequenceNo) + ".txt"
+    def saveToTxt(self):
+        fileName = self.outputDir + self.id + "_output" + ".txt"
         text_file = open(fileName, "w")
+        text_file.write("id= %s \n" % self.id)
         text_file.write("CCDSEL= %s \n" % self.ccdSelect)
         text_file.write("EXPTS= %s \n" % self.exposureStart)
         text_file.write("EXPTSS= %s \n" % self.exposureFraction)
@@ -660,10 +667,10 @@ class matsViewer(tkinter.Tk):
         text_file.close()  
     
     #Save jpeg image to file
-    def saveToJpeg(self,sequenceNo):
+    def saveToJpeg(self):
         writeFormat = 'wb'
 
-        fileName = self.outputDir + "output" + str(sequenceNo) + ".jpg"
+        fileName = self.outputDir + self.id + ".jpg"
         f=open(fileName,writeFormat)
         f.write(self.imageData)
         f.close()
@@ -671,8 +678,8 @@ class matsViewer(tkinter.Tk):
         self.convertAndDisplayImage(fileName)
 
     #Save raw image to pnm file
-    def saveToPnm(self,sequenceNo):
-        fileName = self.outputDir + "rawoutput" + str(sequenceNo) + ".pnm"
+    def saveToPnm(self):
+        fileName = self.outputDir + self.id + ".pnm"
         f=open(fileName,"wb")
         #TODO get the size of the image
         imsize = (self.nRows, self.nCols + 1 )
