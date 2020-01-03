@@ -22,8 +22,10 @@ from PIL import Image
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 #from PIL import Image
+import os
+import sys
 
-
+sys.setrecursionlimit(5000)
 
 class ThreadedTask(threading.Thread):
     def __init__(self, stopEvent, queue, stream, scid, apid, type, subtype):
@@ -61,7 +63,7 @@ class matsViewer(tkinter.Tk):
         self.initialize(parent)
         self.ccdDataDefinition()
         self.imageData=bytes()
-        self.outputDir = "PayloadImages/"
+        self.outputDir = "PayloadImages\\"
         
     def initialize(self,parent):
 
@@ -626,10 +628,10 @@ class matsViewer(tkinter.Tk):
                     self.totalCcdPackets+=1
                     self.totalPayloadPackets.configure(text=("Total Packets: " + str(self.totalCcdPackets)))
                 
-                self.process_queue()
-                #self.after(100,self.process_queue)
+                #self.process_queue()
+                self.after(10,self.process_queue)
             except queue.Empty:
-                self.after(100,self.process_queue)
+                self.after(10,self.process_queue)
 
     def saveToTxt(self):
         fileName = self.outputDir + self.id + "_output" + ".txt"
@@ -700,7 +702,7 @@ class matsViewer(tkinter.Tk):
        
     #Convert 12-bit jpeg to pgm & display image
     def convertAndDisplayImage(self,jpegFile):           
-        outputFile= jpegFile[:-4] + ".pgm"   
+        #outputFile= jpegFile[:-4] + ".pgm"   
         try:
             if self.jpegQuality <= 100:
                 self.image = self.read12bit_jpeg(jpegFile) #read image       
