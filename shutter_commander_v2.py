@@ -83,7 +83,7 @@ class ThreadedTask(threading.Thread):
         with sniffer.RamsesTmSniffer(self.stream) as tm_sniffer, sniffer.RamsesTcSniffer(self.stream) as tc_sniffer:
             all_sniffers = (tm_sniffer, tc_sniffer)
             while (not self.stopEvent.is_set()):
-                sniffer.wait_for_incoming_data(all_sniffers, 0.25)  # timeout given to be able to exit with Ctrl-C
+                sniffer.wait_for_incoming_data(all_sniffers, 0.05)  # timeout given to be able to exit with Ctrl-C
        
                 tc_packet = tc_sniffer.read(scid_filter=self.scid, apid_filter=self.apid, type_filter=self.type, subtype_filter=self.subType, invert_filter=None)
                 if tc_packet is not None:
@@ -157,12 +157,14 @@ class shutter_commander(tkinter.Tk):
                         #Extract & display header information
                         ccdSelect = struct.unpack('B',packet['payload'][ridLength:ridLength+1])[0] 
                         TEXPMS = struct.unpack('I',packet['payload'][ridLength+9:ridLength+13])[0]
-                        index = [int(x) for x in bin(ccdSelect)[2:]]
-                        print(index)
-                        numpy_index = np.where(np.flip(np.array(index),0)==1)
-                        self.CCD_TEXPMS[numpy_index] = TEXPMS
-                        print('Setting CCD TEXPMS for CCD ' + str(numpy_index) + ' to' + str(TEXPMS))
-                        print('New TEXPMS ' + str(self.CCD_TEXPMS))
+                        index = 0
+                        binary_string = str(bin(ccdSelect)[2:])
+                        for i in range(len(binary_string)):
+							if binary_string[i] =='1':
+								index = i
+								self.CCD_TEXPMS[index] = TEXPMS
+								print('Setting CCD TEXPMS for CCD ' + str(index) + ' to' + str(TEXPMS))
+								print('New TEXPMS ' + str(self.CCD_TEXPMS))
 
                                   
                 
@@ -181,12 +183,16 @@ class shutter_commander(tkinter.Tk):
                         #Extract & display header information
                         ccdSelect = struct.unpack('B',packet['payload'][ridLength:ridLength+1])[0] 
                         print('Shooting with CCD# ' + str(ccdSelect))
-                        index = [int(x) for x in bin(ccdSelect)[2:]]
-                        numpy_index = np.where(np.flip(np.array(index),0)==1)
-                        if any(self.CCD_TEXPMS[numpy_index]==0) or not all(x == self.CCD_TEXPMS[numpy_index][0] for x in self.CCD_TEXPMS[numpy_index]):
+                        binary_string = str(bin(ccdSelect)[2:])
+                        index = []
+                        for i in range(len(binary_string)):
+							if binary_string[i] =='1':
+								index.append(i)
+
+                        if any(self.CCD_TEXPMS[index]==0) or not all(x == self.CCD_TEXPMS[index][0] for x in self.CCD_TEXPMS[index]):
                             print('All CCDs must have same exposure > 0 for shutter to work')
                         else:    
-                            send_shuttercommand(self.ser,exposure_time=self.CCD_TEXPMS[numpy_index][0]/1000)
+                            send_shuttercommand(self.ser,exposure_time=self.CCD_TEXPMS[index][0]/1000)
                
                 #self.process_queue()
                 self.after(10,self.process_queue)
