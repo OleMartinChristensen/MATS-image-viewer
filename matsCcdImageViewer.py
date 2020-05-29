@@ -608,7 +608,7 @@ class matsViewer(tkinter.Tk):
                         
                         self.BadCols = np.array([1,self.nBadCols])
                         
-                        self.id = str(UnsegmentedTimeNanoseconds(self.exposureStart,self.exposureFraction)) '_' + str(self.ccdSelect)
+                        self.id = str(UnsegmentedTimeNanoseconds(self.exposureStart,self.exposureFraction)) + '_' + str(self.ccdSelect)
                         #print(self.BadCols.shape)
                         for n in range(self.nBadCols):
                             self.BadCols[n] = struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']+2*n:ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']+2*(n+1)])[0]                        
