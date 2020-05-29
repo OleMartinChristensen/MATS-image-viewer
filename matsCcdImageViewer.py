@@ -523,7 +523,7 @@ class matsViewer(tkinter.Tk):
                 rid=struct.unpack('>H',packet['payload'][:ridLength])[0]
                 
                 #Only process CCD image data packets
-                if rid >= self.ccdPacketRid and rid < self.ccdPacketRid + (self.totalCCDs-1) and packet_type == 'TM':
+                if rid >= self.ccdPacketRid and rid <= self.ccdPacketRid + (self.totalCCDs-1) and packet_type == 'TM':
                     groupFlag = packet['sequence_control']>>14
                     sequenceCounter = packet['sequence_control']&0x3fff     
                     #print(packet['payload'])
