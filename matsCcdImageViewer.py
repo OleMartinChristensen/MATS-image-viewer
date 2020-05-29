@@ -24,8 +24,11 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 #from PIL import Image
 import os
 import sys
+import math
 
 sys.setrecursionlimit(5000)
+
+NANOS_PER_SECOND = 1e9
 
 class ThreadedTask(threading.Thread):
     def __init__(self, stopEvent, queue, stream, scid, apid, type, subtype):
@@ -758,10 +761,10 @@ class matsViewer(tkinter.Tk):
         return im
         
 def UnsegmentedTimeNanoseconds(coarseTime, fineTime):
-    nanos  = np.float64(coarseTime) * np.float64(nanosPerSecond)
+    nanos  = coarseTime * NANOS_PER_SECOND
     fine = math.ldexp(fineTime,-16)
-    fineValue= np.float64(fine)
-    return np.int64(nanos) + np.int64(round(fineValue*nanosPerSecond))    
+
+    return int(nanos + round(fine*NANOS_PER_SECOND))   
         
 #----------------- Main function ----------------
 
