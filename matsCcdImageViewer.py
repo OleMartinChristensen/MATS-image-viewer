@@ -605,7 +605,7 @@ class matsViewer(tkinter.Tk):
                         
                         self.BadCols = np.array([1,self.nBadCols])
                         
-                        self.id = str(self.exposureStart) + '_' + str(self.exposureFraction) + '_' + str(self.ccdSelect)
+                        self.id = str(UnsegmentedTimeNanoseconds(self.exposureStart,self.exposureFraction)) '_' + str(self.ccdSelect)
                         #print(self.BadCols.shape)
                         for n in range(self.nBadCols):
                             self.BadCols[n] = struct.unpack('H',packet['payload'][ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']+2*n:ridLength+self.ccdDataByteOffset['NBC']+self.ccdDataLengths['NBC']+2*(n+1)])[0]                        
@@ -757,7 +757,11 @@ class matsViewer(tkinter.Tk):
         im = np.asarray(im_object)
         return im
         
-    
+def UnsegmentedTimeNanoseconds(coarseTime, fineTime):
+    nanos  = np.float64(coarseTime) * np.float64(nanosPerSecond)
+    fine = math.ldexp(fineTime,-16)
+    fineValue= np.float64(fine)
+    return np.int64(nanos) + np.int64(round(fineValue*nanosPerSecond))    
         
 #----------------- Main function ----------------
 
