@@ -527,7 +527,7 @@ class matsViewer(tkinter.Tk):
                     groupFlag = packet['sequence_control']>>14
                     sequenceCounter = packet['sequence_control']&0x3fff     
                     #print(packet['payload'])
-                    print(sequenceCounter)
+                    #print(sequenceCounter)
                     #Handle data stretched over several packets, such as image data, strip header/context data from first packet
                     if groupFlag == 1 or groupFlag == 3:
                         print("Start packet found")

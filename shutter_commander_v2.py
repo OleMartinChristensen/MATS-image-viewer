@@ -158,13 +158,15 @@ class shutter_commander(tkinter.Tk):
                         ccdSelect = struct.unpack('B',packet['payload'][ridLength:ridLength+1])[0] 
                         TEXPMS = struct.unpack('I',packet['payload'][ridLength+9:ridLength+13])[0]
                         index = 0
-                        binary_string = str(bin(ccdSelect)[2:])
+                        binary_string = str(bin(ccdSelect)[2:])[::-1]
+                        print(binary_string)
                         for i in range(len(binary_string)):
-							if binary_string[i] =='1':
-								index = i
-								self.CCD_TEXPMS[index] = TEXPMS
-								print('Setting CCD TEXPMS for CCD ' + str(index) + ' to' + str(TEXPMS))
-								print('New TEXPMS ' + str(self.CCD_TEXPMS))
+                            print(i)
+                            if binary_string[i] =='1':
+                                index = i
+                                self.CCD_TEXPMS[index] = TEXPMS
+                                print('Setting CCD TEXPMS for CCD ' + str(index) + ' to' + str(TEXPMS))
+                                print('New TEXPMS ' + str(self.CCD_TEXPMS))
 
                                   
                 
@@ -183,11 +185,12 @@ class shutter_commander(tkinter.Tk):
                         #Extract & display header information
                         ccdSelect = struct.unpack('B',packet['payload'][ridLength:ridLength+1])[0] 
                         print('Shooting with CCD# ' + str(ccdSelect))
-                        binary_string = str(bin(ccdSelect)[2:])
+                        binary_string = str(bin(ccdSelect)[2:])[::-1]
                         index = []
                         for i in range(len(binary_string)):
-							if binary_string[i] =='1':
-								index.append(i)
+                            if binary_string[i] =='1':
+                                index.append(i)
+                        print(index)
 
                         if any(self.CCD_TEXPMS[index]==0) or not all(x == self.CCD_TEXPMS[index][0] for x in self.CCD_TEXPMS[index]):
                             print('All CCDs must have same exposure > 0 for shutter to work')
